@@ -1,7 +1,7 @@
 {
-	"name": "theseoframework/wpcs",
+	"name": "theseoframework/wpcs-tsf",
 	"type": "phpcodesniffer-standard",
-	"description": "Modified (for TSF) PHP_CodeSniffer rules (sniffs) to enforce WordPress coding conventions",
+	"description": "Modified (for TSF) PHP_CodeSniffer rules (sniffs) to enforce WordPress and TSF coding conventions.",
 	"keywords": [
 		"phpcs",
 		"standards",
