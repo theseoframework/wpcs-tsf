@@ -6,15 +6,14 @@ This package primarily relies on [WordPress/WordPress-Coding-Standards](https://
 
 ## Installation
 
-1. Import this Git's files to a private folder location.
 1. Open Terminal.
-1. `cd` to folder.
-1. Enter: `composer install`
+1. `cd` to folder you want to install `theseoframework/wcps-tsf`.
+1. Enter: `composer create-project theseoframework/wpcs-tsf`
 
 ## Updating
 
 1. Open Terminal.
-1. `cd` to folder.
+1. `cd` to root folder where this project's `composer.json` resides.
 1. Enter: `composer update`.
 
 ## Usage (VScode)
@@ -28,8 +27,8 @@ _Unlisted settings are optional._
 
 ```JSON
 {
-    "php.validate.executablePath": "C:\\php-folder-set-in-step-1-at-usage\\php.exe",
-    "phpcs.executablePath": "C:\\the-folder-you-ran-composer-for-this-project\\vendor\\bin\\phpcs",
+    "php.validate.executablePath": "C:\\your-php-installation-folder\\php.exe",
+    "phpcs.executablePath": "C:\\the-folder-you-ran-composer-for-this-project\\wpcs-tsf\\vendor\\bin\\phpcs.bat",
     "phpcs.standard": "TSF",
     "phpcs.errorSeverity": 1,
     "phpcs.warningSeverity": 1,
