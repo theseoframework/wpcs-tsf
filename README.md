@@ -2,7 +2,7 @@
 
 This package helps you validate your PHP files against WordPress coding standards, as used for The SEO Framework product family.
 
-This is a fork of [WordPress/WordPress-Coding-Standards](https://github.com/WordPress/WordPress-Coding-Standards)'s `composer.json` file.
+This package primarily relies on [WordPress/WordPress-Coding-Standards](https://github.com/WordPress/WordPress-Coding-Standards), with added sniffs used in development for TSF.
 
 ## Installation
 
