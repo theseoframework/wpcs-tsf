@@ -26,15 +26,15 @@ use PHP_CodeSniffer\Util\Tokens;
  *
  * PHP version ^7.0.0
  *
- * @since TSF 1.0.0
+ * @since 1.0.0
  */
 class OpcodesSniff extends Sniff {
 
 	/**
 	 * @link <https://github.com/php/php-src/blob/PHP-7.4/Zend/zend_compile.c#L3750-L3829>
-	 * @var string[] $funcs
+	 * @var string[] $opFuncs
 	 */
-	protected $funcs = [
+	protected $opFuncs = [
 		'strlen',
 		'is_null',
 		'is_bool',
@@ -71,9 +71,9 @@ class OpcodesSniff extends Sniff {
 
 	/**
 	 * @link <https://github.com/php/php-src/blob/php-7.2.6/ext/opcache/Optimizer/pass1_5.c#L411-L416>
-	 * @var string[] $constfuncs
+	 * @var string[] $opConstFuncs
 	 */
-	protected $constfuncs = [
+	protected $opConstFuncs = [
 		'define',
 		'function_exists',
 		'is_callable',
@@ -83,9 +83,35 @@ class OpcodesSniff extends Sniff {
 	];
 
 	/**
-	 * @var string[] $checks
+	 * @var string[] $internalFuncs
+	 * @see register(), there it's populated.
 	 */
-	public $checks = [];
+	protected $internalFuncs = [];
+
+	/**
+	 * @var string[] $noopInternal
+	 * @see register(), there it's populated.
+	 */
+	protected $noopInternal = [];
+
+	/**
+	 * @var string[] $allNoopChecks
+	 * @see register(), there it's populated.
+	 */
+	protected $allNoopChecks = [];
+
+	/**
+	 * @var string[] $opChecks Internal functions that should be checked for opcode improvements (e.g., 'array_keys').
+	 *                         This should not yield a benefit, though.
+	 * @since 1.1.0
+	 */
+	public $opChecks = [];
+
+	/**
+	 * @var string[] $noopChecks User functions that should not be checked for opcode improvements (i.e., your namespaced functions).
+	 * @since 1.1.0
+	 */
+	public $userNoopChecks = [];
 
 	/**
 	 * Returns an array of tokens this test wants to listen for.
@@ -96,12 +122,25 @@ class OpcodesSniff extends Sniff {
 	 */
 	public function register() {
 		// Handle case-insensitivity of function names.
-		$this->funcs      = $this->arrayKeysToLowercase( $this->funcs );
-		$this->constfuncs = $this->arrayKeysToLowercase( $this->constfuncs );
-		$this->checks     = $this->arrayKeysToLowercase( $this->checks );
+		$this->opFuncs      = array_map( 'strtolower', $this->opFuncs );
+		$this->opConstFuncs = array_map( 'strtolower', $this->opConstFuncs );
+		$this->opChecks     = array_map( 'strtolower', $this->opChecks );
 
-		// Combine checks.
-		$this->checks = array_merge( $this->checks, $this->funcs, $this->constfuncs );
+		// Combine opChecks.
+		$this->opChecks = array_unique( array_merge( $this->opChecks, $this->opFuncs, $this->opConstFuncs ) );
+
+		$this->internalFuncs = array_map( 'strtolower', get_defined_functions()['internal'] );
+
+		$this->noopInternal  = array_diff(
+			$this->internalFuncs,
+			$this->opFuncs,
+			$this->opConstFuncs
+		);
+
+		$this->userNoopChecks = array_map( 'strtolower', $this->userNoopChecks );
+
+		// Combine noopChecks.
+		$this->allNoopChecks = array_unique( array_merge( $this->noopInternal, $this->userNoopChecks ) );
 
 		$targets = [
 			\T_STRING,
@@ -142,8 +181,6 @@ class OpcodesSniff extends Sniff {
 	 *
 	 * @param int $stackPtr The position of the current token in
 	 *                      the stack passed in $tokens.
-	 *
-	 * @return bool
 	 */
 	protected function process_namespaces( $stackPtr ) {
 
@@ -151,39 +188,54 @@ class OpcodesSniff extends Sniff {
 		$functionLc = strtolower( $function );
 
 		if ( '' !== $this->determineNamespace( $this->phpcsFile, $stackPtr ) ) {
-			if ( in_array( $functionLc, $this->checks, true ) && false === $this->is_token_globally_namespaced( $stackPtr ) ) {
-				$this->phpcsFile->addWarning(
-					'Function %s should have a leading namespace separator (`\`).',
-					$stackPtr,
-					'ShouldHaveNamespaceEscape',
-					["{$function}()"]
-				);
+			if ( in_array( $functionLc, $this->opChecks, true ) ) {
+				if ( false === $this->is_token_globally_namespaced( $stackPtr ) ) {
+
+					$warning = $this->is_object_creation( $stackPtr )
+						? 'Class %s should have a leading namespace separator `\`.'
+						: 'Function %s should have a leading namespace separator `\`.';
+
+					$this->phpcsFile->addWarning(
+						$warning,
+						$stackPtr,
+						'ShouldHaveNamespaceEscape',
+						[ "{$function}()" ]
+					);
+				}
+			} elseif ( ! in_array( $functionLc, $this->internalFuncs, true ) && ! in_array( $functionLc, $this->allNoopChecks, true )  ) {
+				if ( false === $this->is_token_globally_namespaced( $stackPtr ) ) {
+
+					$warning = $this->is_object_creation( $stackPtr )
+						? 'Class %s should have a leading namespace separator `\`.'
+						: 'Function %s should have a leading namespace separator `\`.';
+
+					$this->phpcsFile->addWarning(
+						$warning,
+						$stackPtr,
+						'ShouldHaveNamespaceEscape',
+						[ "{$function}()" ]
+					);
+				}
 			}
 		} else {
 			// When there's no namespace, we're already in the correct scope for the opcode.
 			// Warn dev that there's a useless NS escape.
-			if ( true === $this->is_token_globally_namespaced( $stackPtr ) ) {
-				$this->phpcsFile->addWarning(
-					'Function %s does not need a leading namespace separator.',
-					$stackPtr,
-					'UselessLeadingNamespaceEscape',
-					["{$function}()"]
-				);
+			if ( ! in_array( $functionLc, $this->userNoopChecks, true ) ) {
+				if ( true === $this->is_token_globally_namespaced( $stackPtr ) ) {
+
+					$warning = $this->is_object_creation( $stackPtr )
+						? 'Class %s should have a leading namespace separator `\`.'
+						: 'Function %s should have a leading namespace separator `\`.';
+
+					$this->phpcsFile->addWarning(
+						$warning,
+						$stackPtr,
+						'UselessLeadingNamespaceEscape',
+						[ "{$function}()" ]
+					);
+				}
 			}
 		}
-	}
-
-	/**
-	 * Is the class/function/constant name namespaced or global?
-	 *
-	 * @since 1.0.0
-	 *
-	 * @param string $FQName Fully Qualified name of a class, function etc.
-	 *                       I.e. should always start with a `\`.
-	 * @return bool True if namespaced, false if global.
-	 */
-	public function hasLeadingNamespaceDelimiter( $name ) {
-		return 0 === strpos( $name, '\\' );
 	}
 
 	/**
@@ -207,10 +259,6 @@ class OpcodesSniff extends Sniff {
 		if ( $this->is_class_object_call( $stackPtr ) === true ) {
 			return false;
 		}
-
-		// if ( $this->is_token_globally_namespaced( $stackPtr ) === true ) {
-		// 	return false;
-		// }
 
 		$prev = $this->phpcsFile->findPrevious( Tokens::$emptyTokens, ( $stackPtr - 1 ), null, true );
 		if ( false !== $prev ) {
@@ -262,6 +310,7 @@ class OpcodesSniff extends Sniff {
 	 * @return bool
 	 */
 	protected function is_class_object_call( $stackPtr ) {
+
 		$before = $this->phpcsFile->findPrevious( Tokens::$emptyTokens, ( $stackPtr - 1 ), null, true, null, true );
 
 		if ( false === $before ) {
@@ -271,6 +320,31 @@ class OpcodesSniff extends Sniff {
 		if ( \T_OBJECT_OPERATOR !== $this->tokens[ $before ]['code']
 			&& \T_DOUBLE_COLON !== $this->tokens[ $before ]['code']
 		) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Check if a particular token is a (static or non-static) call to an object.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param int $stackPtr The position of the current token in
+	 *                      the stack passed in $tokens.
+	 *
+	 * @return bool
+	 */
+	protected function is_object_creation( $stackPtr ) {
+
+		$before = $this->phpcsFile->findPrevious( Tokens::$emptyTokens, ( $stackPtr - 2 ), null, true, null, true );
+
+		if ( false === $before ) {
+			return false;
+		}
+
+		if ( \T_NEW !== $this->tokens[ $before ]['code'] ) {
 			return false;
 		}
 
@@ -292,6 +366,7 @@ class OpcodesSniff extends Sniff {
 	 * @return bool
 	 */
 	protected function is_token_globally_namespaced( $stackPtr ) {
+
 		$prev = $this->phpcsFile->findPrevious( Tokens::$emptyTokens, ( $stackPtr - 1 ), null, true, null, true );
 
 		if ( false === $prev ) {
@@ -309,9 +384,6 @@ class OpcodesSniff extends Sniff {
 
 		$function   = $this->tokens[ $stackPtr ]['content'];
 		$functionLc = strtolower( $function );
-		if ( '_init_tsf' === $functionLc ) {
-			throw new \Exception( serialize( $this->tokens[ $before_prev ] ) );
-		}
 
 		// This is an actual non-global namespace lookup.
 		if ( \T_STRING === $this->tokens[ $before_prev ]['code']
