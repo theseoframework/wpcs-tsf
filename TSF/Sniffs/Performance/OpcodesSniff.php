@@ -21,6 +21,9 @@ use PHP_CodeSniffer\Util\Tokens;
  * - Namespaced opcode calls for pre-compiled functions.
  * - Namespaced opcode calls for pre-evaluated constant functions.
  *
+ * TODO:
+ * - Check for map/walk
+ *
  * PHP version ^7.0.0
  *
  * @since TSF 1.0.0
@@ -101,13 +104,6 @@ class OpcodesSniff extends Sniff {
 		$this->checks = array_merge( $this->checks, $this->funcs, $this->constfuncs );
 
 		$targets = [
-			// \T_FUNCTION,
-			// \T_CLOSURE,
-			// \T_NEW,
-			// \T_CLASS,
-			// \T_DOUBLE_COLON,
-			// \T_FUNCTION,
-			// \T_CLOSURE,
 			\T_STRING,
 		];
 
@@ -155,7 +151,7 @@ class OpcodesSniff extends Sniff {
 		$functionLc = strtolower( $function );
 
 		if ( '' !== $this->determineNamespace( $this->phpcsFile, $stackPtr ) ) {
-			if ( in_array( $functionLc, $this->checks, true ) && false === $this->is_token_namespaced( $stackPtr ) ) {
+			if ( in_array( $functionLc, $this->checks, true ) && false === $this->is_token_globally_namespaced( $stackPtr ) ) {
 				$this->phpcsFile->addWarning(
 					'Function %s should have a leading namespace separator (`\`).',
 					$stackPtr,
@@ -166,7 +162,7 @@ class OpcodesSniff extends Sniff {
 		} else {
 			// When there's no namespace, we're already in the correct scope for the opcode.
 			// Warn dev that there's a useless NS escape.
-			if ( true === $this->is_token_namespaced( $stackPtr ) ) {
+			if ( true === $this->is_token_globally_namespaced( $stackPtr ) ) {
 				$this->phpcsFile->addWarning(
 					'Function %s does not need a leading namespace separator.',
 					$stackPtr,
@@ -212,7 +208,7 @@ class OpcodesSniff extends Sniff {
 			return false;
 		}
 
-		// if ( $this->is_token_namespaced( $stackPtr ) === true ) {
+		// if ( $this->is_token_globally_namespaced( $stackPtr ) === true ) {
 		// 	return false;
 		// }
 
@@ -295,7 +291,7 @@ class OpcodesSniff extends Sniff {
 	 *
 	 * @return bool
 	 */
-	protected function is_token_namespaced( $stackPtr ) {
+	protected function is_token_globally_namespaced( $stackPtr ) {
 		$prev = $this->phpcsFile->findPrevious( Tokens::$emptyTokens, ( $stackPtr - 1 ), null, true, null, true );
 
 		if ( false === $prev ) {
@@ -311,12 +307,17 @@ class OpcodesSniff extends Sniff {
 			return false;
 		}
 
-		// Why is this here?
-		// if ( \T_STRING !== $this->tokens[ $before_prev ]['code']
-		// 	&& \T_NAMESPACE !== $this->tokens[ $before_prev ]['code']
-		// ) {
-		// 	return false;
-		// }
+		$function   = $this->tokens[ $stackPtr ]['content'];
+		$functionLc = strtolower( $function );
+		if ( '_init_tsf' === $functionLc ) {
+			throw new \Exception( serialize( $this->tokens[ $before_prev ] ) );
+		}
+
+		// This is an actual non-global namespace lookup.
+		if ( \T_STRING === $this->tokens[ $before_prev ]['code']
+		|| \T_NAMESPACE === $this->tokens[ $before_prev ]['code'] ) {
+			return false;
+		}
 
 		return true;
 	}

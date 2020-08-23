@@ -6,7 +6,7 @@ This is a fork of [WordPress/WordPress-Coding-Standards](https://github.com/Word
 
 ## Installation
 
-1. Import this Git's files to a private folder locaiton.
+1. Import this Git's files to a private folder location.
 1. Open Terminal.
 1. `cd` to folder.
 1. Enter: `composer install`
@@ -30,7 +30,7 @@ _Unlisted settings are optional._
 {
     "php.validate.executablePath": "C:\\php-folder-set-in-step-1-at-usage\\php.exe",
     "phpcs.executablePath": "C:\\the-folder-you-ran-composer-for-this-project\\vendor\\bin\\phpcs",
-    "phpcs.standard": "WordPress-Extra",
+    "phpcs.standard": "TSF",
     "phpcs.errorSeverity": 1,
     "phpcs.warningSeverity": 1,
 }
