@@ -3,6 +3,10 @@
 	<description>TSF Coding Standards</description>
 
 	<rule ref="TSF.Performance.Opcodes"/>
+	<rule ref="TSF.Performance.Functions">
+		<exclude name="TSF.Performance.Functions.WordPressi18n"/>
+		<exclude name="TSF.Performance.Functions.WordPressEscape"/>
+	</rule>
 
 	<config name="minimum_supported_wp_version" value="5.1"/>
 	<config name="testVersion" value="5.6-"/>

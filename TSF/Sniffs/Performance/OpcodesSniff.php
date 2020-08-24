@@ -221,11 +221,11 @@ class OpcodesSniff extends Sniff {
 			// When there's no namespace, we're already in the correct scope for the opcode.
 			// Warn dev that there's a useless NS escape.
 			if ( ! in_array( $functionLc, $this->userNoopChecks, true ) ) {
-				if ( true === $this->is_token_namespaced( $stackPtr ) ) {
+				if ( true === $this->is_token_globally_namespaced( $stackPtr ) ) {
 
 					$warning = $this->is_object_creation( $stackPtr )
-						? 'Class %s should have a leading namespace separator `\`.'
-						: 'Function %s should have a leading namespace separator `\`.';
+						? 'Class %s should not have a leading namespace separator `\`.'
+						: 'Function %s should not have a leading namespace separator `\`.';
 
 					$this->phpcsFile->addWarning(
 						$warning,
