@@ -22,7 +22,7 @@ use PHP_CodeSniffer\Util\Tokens;
  * - Namespaced opcode calls for pre-evaluated constant functions.
  *
  * TODO:
- * - Check for map/walk
+ * - Check for map/walk/function_exists
  *
  * PHP version ^7.0.0
  *
@@ -189,7 +189,7 @@ class OpcodesSniff extends Sniff {
 
 		if ( '' !== $this->determineNamespace( $this->phpcsFile, $stackPtr ) ) {
 			if ( in_array( $functionLc, $this->opChecks, true ) ) {
-				if ( false === $this->is_token_globally_namespaced( $stackPtr ) ) {
+				if ( false === $this->is_token_namespaced( $stackPtr ) ) {
 
 					$warning = $this->is_object_creation( $stackPtr )
 						? 'Class %s should have a leading namespace separator `\`.'
@@ -203,7 +203,7 @@ class OpcodesSniff extends Sniff {
 					);
 				}
 			} elseif ( ! in_array( $functionLc, $this->internalFuncs, true ) && ! in_array( $functionLc, $this->allNoopChecks, true )  ) {
-				if ( false === $this->is_token_globally_namespaced( $stackPtr ) ) {
+				if ( false === $this->is_token_namespaced( $stackPtr ) ) {
 
 					$warning = $this->is_object_creation( $stackPtr )
 						? 'Class %s should have a leading namespace separator `\`.'
@@ -221,7 +221,7 @@ class OpcodesSniff extends Sniff {
 			// When there's no namespace, we're already in the correct scope for the opcode.
 			// Warn dev that there's a useless NS escape.
 			if ( ! in_array( $functionLc, $this->userNoopChecks, true ) ) {
-				if ( true === $this->is_token_globally_namespaced( $stackPtr ) ) {
+				if ( true === $this->is_token_namespaced( $stackPtr ) ) {
 
 					$warning = $this->is_object_creation( $stackPtr )
 						? 'Class %s should have a leading namespace separator `\`.'
@@ -242,7 +242,7 @@ class OpcodesSniff extends Sniff {
 	 * Verify is the current token is a function call.
 	 *
 	 * @since 1.0.0
-	 * @source wordpress-coding-standards\wpcs
+	 * @source wordpress-coding-standards\wpcs (partial)
 	 *
 	 * @param int $stackPtr The position of the current token in
 	 *                      the stack passed in $tokens.
@@ -264,9 +264,9 @@ class OpcodesSniff extends Sniff {
 		if ( false !== $prev ) {
 			// Skip sniffing on function, class definitions or for function aliases in use statements.
 			$skipped = array(
-				\T_FUNCTION        => \T_FUNCTION,
-				\T_CLASS           => \T_CLASS,
-				\T_AS              => \T_AS, // Use declaration alias.
+				\T_FUNCTION => \T_FUNCTION,
+				\T_CLASS    => \T_CLASS,
+				\T_AS       => \T_AS, // Use declaration alias.
 			);
 
 			if ( isset( $skipped[ $this->tokens[ $prev ]['code'] ] ) ) {
@@ -285,6 +285,11 @@ class OpcodesSniff extends Sniff {
 			&& ( \T_AS === $this->tokens[ $next ]['code'] || \T_SEMICOLON === $this->tokens[ $next ]['code'] )
 		) {
 			return true;
+		}
+
+		// Check for reference function.
+		if ( \T_BITWISE_AND === $this->tokens[ $prev ]['code'] ) {
+			return false;
 		}
 
 		// If it's not a `use` statement, there should be parenthesis.
@@ -357,8 +362,36 @@ class OpcodesSniff extends Sniff {
 	 * @internal This will give a false positive if the file is not namespaced and the token is prefixed
 	 * with `namespace\`.
 	 *
+	 * @since 1.1.1
+	 * @source wordpress-coding-standards\wpcs (partially)
+	 *
+	 * @param int $stackPtr The position of the current token in
+	 *                      the stack passed in $tokens.
+	 *
+	 * @return bool
+	 */
+	protected function is_token_namespaced( $stackPtr ) {
+
+		$prev = $this->phpcsFile->findPrevious( Tokens::$emptyTokens, ( $stackPtr - 1 ), null, true, null, true );
+		if ( false === $prev ) {
+			return false;
+		}
+
+		if ( \T_NS_SEPARATOR !== $this->tokens[ $prev ]['code'] ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Check if a particular token is prefixed with a namespace.
+	 *
+	 * @internal This will give a false positive if the file is not namespaced and the token is prefixed
+	 * with `namespace\`.
+	 *
 	 * @since 1.0.0
-	 * @source wordpress-coding-standards\wpcs
+	 * @source wordpress-coding-standards\wpcs (mostly)
 	 *
 	 * @param int $stackPtr The position of the current token in
 	 *                      the stack passed in $tokens.
@@ -368,7 +401,6 @@ class OpcodesSniff extends Sniff {
 	protected function is_token_globally_namespaced( $stackPtr ) {
 
 		$prev = $this->phpcsFile->findPrevious( Tokens::$emptyTokens, ( $stackPtr - 1 ), null, true, null, true );
-
 		if ( false === $prev ) {
 			return false;
 		}
