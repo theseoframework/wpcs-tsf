@@ -8,8 +8,8 @@
 		<exclude name="TSF.Performance.Functions.WordPressEscape"/>
 	</rule>
 
-	<config name="minimum_supported_wp_version" value="5.1"/>
-	<config name="testVersion" value="5.6-"/>
+	<config name="minimum_supported_wp_version" value="5.5"/>
+	<config name="testVersion" value="7.2-"/>
 
 	<rule ref="WordPress-Docs"/>
 	<rule ref="WordPress-Extra"/>
@@ -36,6 +36,9 @@
 
 		<!-- Inline control structures greatly condense code, thus improving readability. This rule is bad. -->
 		<exclude name="Generic.ControlStructures.InlineControlStructure"/>
+
+		<!-- We do not rely on autofixes, so we can safely disable this redundant issue check. -->
+		<exclude name="WordPress.WhiteSpace.PrecisionAlignment"/>
 
 		<!-- TEMP - To condense code, we utilize these. When we move to PHP7, we might reimplement this. -->
 		<exclude name="Squiz.PHP.DisallowMultipleAssignments"/>
@@ -76,6 +79,13 @@
 			<!-- <property name="customAutoEscapedFunctions" type="array" value="description,attention,code_wrap,get_social_image_uploader_form,make_single_select_form,get_generated_seo_bar"/> -->
 			<!-- Custom list of functions which print output incorporating the passed values. -->
 			<!-- <property name="customPrintingFunctions" type="array" value=""/> -->
+		</properties>
+	</rule>
+
+	<rule ref="Squiz.PHP.CommentedOutCode">
+		<!-- Default is 35%. WP Extra makes it 40%, which is still low enough to be annoying. -->
+		<properties>
+			<property name="maxPercentage" type="int" value="45"/>
 		</properties>
 	</rule>
 
