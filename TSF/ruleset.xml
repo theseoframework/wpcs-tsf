@@ -37,6 +37,9 @@
 		<!-- Inline control structures greatly condense code, thus improving readability. This rule is bad. -->
 		<exclude name="Generic.ControlStructures.InlineControlStructure"/>
 
+		<!-- We support PHP 7.2+ now, not < 5.4 -->
+		<exclude name="Generic.PHP.DisallowShortOpenTag.EchoFound"/>
+
 		<!-- We do not rely on autofixes, so we can safely disable this redundant issue check. -->
 		<exclude name="WordPress.WhiteSpace.PrecisionAlignment"/>
 
