@@ -1,6 +1,7 @@
 <?php
 /**
- * Opcodes, a custom sniff helping improve performance for PHP_CodeSniffer by testing against direct opcode calls.
+ * Functions, a custom sniff helping improve performance for PHP_CodeSniffer
+ * by testing against slow function calls.
  *
  * @package   TSF
  * @copyright 2020 Sybre Waaijer
