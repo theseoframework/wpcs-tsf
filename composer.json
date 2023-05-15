@@ -60,5 +60,10 @@
 		"check-complete-strict": [
 			"@php ./vendor/phpcsstandards/phpcsdevtools/bin/phpcs-check-feature-completeness ./TSF"
 		]
+	},
+	"config": {
+		"allow-plugins": {
+			"dealerdirect/phpcodesniffer-composer-installer": true
+		}
 	}
 }

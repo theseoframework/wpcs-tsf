@@ -9,18 +9,11 @@
 	</rule>
 
 	<config name="minimum_supported_wp_version" value="5.5"/>
-	<config name="testVersion" value="7.3-"/>
+	<config name="testVersion" value="7.4-"/>
 
 	<rule ref="WordPress-Docs"/>
 	<rule ref="WordPress-Extra"/>
-
-	<rule ref="VariableAnalysis">
-		<properties>
-			<!-- This removes a nag whenever we forward variables to require... -->
-			<!-- Probably TEMP, for it is a bad practise not seeing other code. -->
-			<property name="allowUnusedVariablesBeforeRequire" type="bool" value="1"/>
-		</properties>
-	</rule>
+	<rule ref="VariableAnalysis"/>
 
 	<rule ref="PHPCompatibilityWP"/>
 	<rule ref="WordPress-Core">
