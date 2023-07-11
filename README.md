@@ -4,9 +4,6 @@ This package helps you validate your PHP files against WordPress coding standard
 
 This package primarily relies on [WordPress/WordPress-Coding-Standards](https://github.com/WordPress/WordPress-Coding-Standards), with added sniffs used in development for TSF.
 
-TODO: From 6 replacements, vsprintf is faster than sprintf, linearly even faster with more replacements added. From 4 replacements vsprintf is faster than sprintf when spread operators (...) are used.
-TODO: WP Query detection? (posts_per_page => -1 is already detected by WP Core, might want to use their sniff)
-
 ## Installation
 
 1. Open Terminal.
