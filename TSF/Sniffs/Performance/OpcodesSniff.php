@@ -32,7 +32,7 @@ use PHP_CodeSniffer\Util\Tokens;
 class OpcodesSniff extends Sniff {
 
 	/**
-	 * @link <https://github.com/php/php-src/blob/PHP-7.4/Zend/zend_compile.c#L3750-L3829>
+	 * @link <https://github.com/php/php-src/blob/PHP-8.1/Zend/zend_compile.c#L4385-L4469>
 	 * @var string[] $opFuncs
 	 */
 	protected $opFuncs = [
@@ -48,6 +48,7 @@ class OpcodesSniff extends Sniff {
 		'is_array',
 		'is_object',
 		'is_resource',
+		'is_scalar',
 		'boolval',
 		'intval',
 		'floatval',
@@ -71,16 +72,16 @@ class OpcodesSniff extends Sniff {
 	];
 
 	/**
-	 * @link <https://github.com/php/php-src/blob/php-7.2.6/ext/opcache/Optimizer/pass1_5.c#L411-L416>
+	 * @link <https://github.com/php/php-src/blob/PHP-8.1/Zend/Optimizer/pass1.c#L316-L478>
 	 * @var string[] $opConstFuncs
 	 */
 	protected $opConstFuncs = [
-		'define',
+		'constant',
 		'function_exists',
 		'is_callable',
 		'extension_loaded',
-		'constant',
 		'dirname',
+		'define',
 	];
 
 	/**
