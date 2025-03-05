@@ -4,6 +4,7 @@
 # Declare files that will otherwise have CRLF line endings on checkout.
 *.php text eol=lf
 *.js text eol=lf
+*.json text eol=lf
 *.css text eol=lf
 *.md text eol=lf
 *.txt text eol=lf

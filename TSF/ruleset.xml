@@ -13,7 +13,6 @@
 
 	<rule ref="WordPress-Docs"/>
 	<rule ref="WordPress-Extra"/>
-	<rule ref="VariableAnalysis"/>
 
 	<rule ref="PHPCompatibilityWP"/>
 	<rule ref="WordPress-Core">
@@ -24,8 +23,22 @@
 		<!-- No. mt_rand() is perfectly fine. -->
 		<exclude name="WordPress.WP.AlternativeFunctions.rand_mt_rand"/>
 
+		<!-- Verify method signatures for compatibility with a few typical WP parent classes. -->
+		<rule ref="WordPressVIPMinimum.Classes.DeclarationCompatibility"/>
+
+		<!-- Verify that all functions which are hooked into a filter always return a value. -->
+		<rule ref="WordPressVIPMinimum.Hooks.AlwaysReturnInFilter"/>
+
+		<!-- Verify that some typical functions with mixed return types are not nested.
+			This can prevent some TypeErrors and related deprecation notices. -->
+		<rule ref="WordPressVIPMinimum.Security.EscapingVoidReturnFunctions"/>
+
+		<!-- Verify that the correct escaping function is used based on the context. -->
+		<rule ref="WordPressVIPMinimum.Security.ProperEscapingFunction"/>
+
 		<!-- We don't need to clutter code. -->
 		<exclude name="WordPress.Classes.ClassInstantiation.MissingParenthesis"/>
+		<exclude name="PSR12.Classes.ClassInstantiation.MissingParentheses"/>
 
 		<!-- Limiting rule is limiting. Learn elementary PHP instead... -->
 		<exclude name="Squiz.Operators.ValidLogicalOperators"/>
@@ -39,9 +52,17 @@
 
 		<!-- We support PHP 7.2+ now, not < 5.4 -->
 		<exclude name="Generic.PHP.DisallowShortOpenTag.EchoFound"/>
+		<!-- The semicolon is clutter, the short echo tag separates itself -->
+		<exclude name="Squiz.PHP.EmbeddedPhp.ShortOpenEchoNoSemicolon"/>
 
 		<!-- We do not rely on autofixes, so we can safely disable this redundant issue check. -->
-		<exclude name="WordPress.WhiteSpace.PrecisionAlignment"/>
+		<exclude name="Universal.WhiteSpace.PrecisionAlignment"/>
+
+		<!-- This rule conflicts with our use of ".class" -->
+		<exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
+
+		<!-- It's rare to assign variables to an anonymous class, let's not clutter code -->
+		<exclude name="Universal.Classes.RequireAnonClassParentheses.Missing"/>
 
 		<!-- TEMP - To condense code, we utilize these. When we move to PHP7, we might reimplement this. -->
 		<exclude name="Squiz.PHP.DisallowMultipleAssignments"/>
@@ -49,40 +70,40 @@
 		<exclude name="PEAR.Functions.FunctionCallSignature.ContentAfterOpenBracket"/>
 		<exclude name="PEAR.Functions.FunctionCallSignature.CloseBracketLine"/>
 
-		<!-- TEMP - We derived our own standard of commenting by adding tokens, it's easier for me, but harder others. We'll fix this later. -->
-		<exclude name="Squiz.Commenting.InlineComment.NoSpaceBefore"/>
-
 		<!-- TEMP - Revisit this later. We don't add short descriptions for actions, filters, and properties. -->
 		<exclude name="Generic.Commenting.DocComment.MissingShort"/>
 
 		<!-- Asinine standard is radical. https://make.wordpress.org/core/2019/07/12/php-coding-standards-changes/ -->
 		<exclude name="Generic.Arrays.DisallowShortArraySyntax"/>
 		<!-- WordPress doesn't like performance for some reason. -->
-		<exclude name="WordPress.PHP.DisallowShortTernary"/>
+		<exclude name="Universal.Arrays.DisallowShortArraySyntax"/>
+
+		<!-- Only dillentanti believe this can be used incorrectly. -->
+		<exclude name="Universal.Operators.DisallowShortTernary"/>
 
 		<!-- This is already against the rules. However, methods and namespaced functions are allowed to have this; "it's publicly private" -->
 		<exclude name="PSR2.Methods.MethodDeclaration.Underscore"/>
 
+		<!-- We may want to look at this later. Mixing namespaces in the API file is helpful for legacy functions. -->
+		<exclude name="Universal.Namespaces.OneDeclarationPerFile"/>
+		<exclude name="Universal.Namespaces.DisallowCurlyBraceSyntax"/>
+		<exclude name="Universal.Namespaces.DisallowDeclarationWithoutName"/>
+
+		<!-- While noble, this can cause issues with named arguments. PHP relies on them interally, e.g., spl_autoload_register's "$class" -->
+		<exclude name="Universal.NamingConventions.NoReservedKeywordParameterNames"/>
+
 		<!-- Goto is bad when doing it Assembly-style (jumping through loops), but not outside in modern structure. Stop being numinous. -->
 		<!-- Besides, PHP errors out when jumping through loops with goto -->
 		<exclude name="Generic.PHP.DiscourageGoto"/>
-	</rule>
 
-	<rule ref="WordPress.Security.EscapeOutput">
-		<!-- TODO: Report issue that T_THIS should be ignored when there's a pointer attached.
-			Now, I tried adding: "if ( '$this' === $this->tokens[ $i ]['content'] ) return;"
-			... It turns out that there's absolutely no method support for this rule.
-		-->
-		<properties>
-			<!-- Custom list of functions which escape values for output. -->
-			<!-- sanitize_key is more effective than most escaping functions... -->
-			<property name="customEscapingFunctions" type="array" value="sanitize_key"/>
-			<!-- Custom list of functions whose return values are pre-escaped for output. Doesn't work, as we need $this... -->
-			<!-- see https://github.com/WordPress/WordPress-Coding-Standards/issues/1766 -->
-			<!-- <property name="customAutoEscapedFunctions" type="array" value="description,attention,code_wrap,get_social_image_uploader_form,make_single_select_form,get_generated_seo_bar"/> -->
-			<!-- Custom list of functions which print output incorporating the passed values. -->
-			<!-- <property name="customPrintingFunctions" type="array" value=""/> -->
-		</properties>
+		<!-- We deliberately do not adhere to this style when we separate a "scope," for we use "in the loop" and "custom query" -->
+		<exclude name="Universal.ControlStructures.DisallowLonelyIf"/>
+
+		<!-- This invokes when using a variable, noise. -->
+		<exclude name="WordPress.WP.Capabilities.Undetermined"/>
+
+		<!-- Doesn't matter. Noise. -->
+		<exclude name="Universal.CodeAnalysis.StaticInFinalClass"/>
 	</rule>
 
 	<rule ref="Squiz.PHP.CommentedOutCode">
