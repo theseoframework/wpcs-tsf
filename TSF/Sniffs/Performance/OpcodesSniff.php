@@ -193,7 +193,6 @@ class OpcodesSniff extends Sniff {
 		if ( '' !== $this->determineNamespace( $this->phpcsFile, $stackPtr ) ) {
 			if ( in_array( $functionLc, $this->opChecks, true ) ) {
 				if ( false === $this->is_token_namespaced( $stackPtr ) ) {
-
 					$warning = $this->is_object_creation( $stackPtr )
 						? 'Class %s should have a leading namespace separator `\`.'
 						: 'Function %s should have a leading namespace separator `\`.';
@@ -207,10 +206,11 @@ class OpcodesSniff extends Sniff {
 				}
 			} elseif ( ! in_array( $functionLc, $this->internalFuncs, true ) && ! in_array( $functionLc, $this->allNoopChecks, true )  ) {
 				if ( false === $this->is_token_namespaced( $stackPtr ) ) {
+					// Object creations are always force-namespaced. They'll crash without it. Ignore them.
+					if ( $this->is_object_creation( $stackPtr ) )
+						return;
 
-					$warning = $this->is_object_creation( $stackPtr )
-						? 'Class %s should have a leading namespace separator `\`.'
-						: 'Function %s should have a leading namespace separator `\`.';
+					$warning = 'Function %s should have a leading namespace separator `\`.';
 
 					$this->phpcsFile->addWarning(
 						$warning,
