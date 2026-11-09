@@ -32,6 +32,16 @@ use PHP_CodeSniffer\Util\Tokens;
 class OpcodesSniff extends Sniff {
 
 	/**
+	 * @var \PHP_CodeSniffer\Files\File $phpcsFile The file being scanned.
+	 */
+	protected $phpcsFile;
+
+	/**
+	 * @var array $tokens The tokens of the file being scanned.
+	 */
+	protected $tokens;
+
+	/**
 	 * @link <https://github.com/php/php-src/blob/php-8.4.0RC2/Zend/zend_compile.c#L4954-L5025>
 	 * @var string[] $opFuncs
 	 */

@@ -29,6 +29,16 @@ use PHP_CodeSniffer\Util\Tokens;
 class FunctionsSniff extends Sniff {
 
 	/**
+	 * @var \PHP_CodeSniffer\Files\File $phpcsFile The file being scanned.
+	 */
+	protected $phpcsFile;
+
+	/**
+	 * @var array $tokens The tokens of the file being scanned.
+	 */
+	protected $tokens;
+
+	/**
 	 * @var string[] $slowFuncs
 	 */
 	protected $slowInternalFuncs = [
